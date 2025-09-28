@@ -1,0 +1,43 @@
+//@version=5
+indicator("Pipmatryx CONFIRMATION HUD", overlay=true)
+
+// ---------- Inputs ----------
+rsiLen = input.int(14, "RSI Length")
+src    = input.source(close, "Source")
+
+// ---------- RSI ----------
+rsi = ta.rsi(src, rsiLen)
+
+// ---------- HUD logic ----------
+isBull = rsi >= 50 and rsi < 70
+isOB   = rsi >= 70
+isBear = rsi >= 30 and rsi < 50
+isOS   = rsi <= 30
+
+// Labels & arrows
+arrow = isBull ? "▲" : isOB ? "▼" : isBear ? "▼" : isOS ? "▲" : ""
+label = isBull ? "BULL" : isOB ? "OVERBOUGHT" : isBear ? "BEAR" : isOS ? "OVERSOLD" : "NEUTRAL"
+
+// ---------- Colors ----------
+charcoalBlack = color.rgb(16,16,16)              // true charcoal black
+headerColor   = color.rgb(255,0,255)            // neon magenta
+valueColor    = isOB ? color.rgb(255,100,100) : isOS ? color.rgb(100,150,255) : color.rgb(0,255,255)
+signalColor   = isBull ? color.rgb(0,255,128) : isOB ? color.rgb(255,50,50) : isBear ? color.rgb(255,165,0) : isOS ? color.rgb(50,150,255) : color.rgb(200,200,200)
+stateColor    = signalColor
+
+// Cell backgrounds all charcoal
+bgCell = charcoalBlack
+
+// ---------- HUD Table ----------
+var table hud = table.new(position.top_right, 3, 2, border_width=2, frame_color=color.rgb(255,0,255), frame_width=2)
+if barstate.islast
+    // headers
+    table.cell(hud, 0, 0, "pipmatryx value", text_color=headerColor, bgcolor=bgCell)
+    table.cell(hud, 1, 0, "Signal", text_color=headerColor, bgcolor=bgCell)
+    table.cell(hud, 2, 0, "State", text_color=headerColor, bgcolor=bgCell)
+
+    // values
+    table.cell(hud, 0, 1, str.tostring(rsi, "#.##"), text_color=valueColor, bgcolor=bgCell)
+    table.cell(hud, 1, 1, arrow, text_color=signalColor, bgcolor=bgCell)
+    table.cell(hud, 2, 1, label, text_color=stateColor, bgcolor=bgCell)
+
