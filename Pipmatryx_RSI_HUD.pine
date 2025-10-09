@@ -1,43 +1,62 @@
 //@version=5
-indicator("Pipmatryx CONFIRMATION HUD", overlay=true)
+indicator("Pipmatryx Confirmation HUD + EMA System", overlay=true)
 
-// ---------- Inputs ----------
+//=============================
+// 🔹 1. EMA System
+//=============================
+emaLength1 = input.int(50, "Fast EMA Length")
+emaLength2 = input.int(200, "Slow EMA Length")
+
+ema50  = ta.ema(close, emaLength1)
+ema200 = ta.ema(close, emaLength2)
+
+// 50 EMA color logic
+emaColor = close > ema50 ? color.new(color.lime, 0) : color.new(color.red, 0)
+
+// Plot EMAs (thin)
+plot(ema50, color=emaColor, linewidth=1, title="50 EMA")
+plot(ema200, color=color.black, linewidth=1, title="200 EMA")
+
+// Detect crossovers
+bullishCross = ta.crossover(ema50, ema200)
+bearishCross = ta.crossunder(ema50, ema200)
+
+// Plot purple knots exactly at crossover points
+plot(bullishCross ? ema50 : na, style=plot.style_circles, color=color.purple, linewidth=3, title="Bullish Knot")
+plot(bearishCross ? ema50 : na, style=plot.style_circles, color=color.purple, linewidth=3, title="Bearish Knot")
+
+//=============================
+// 🔹 2. Pipmatryx Confirmation HUD (RSI)
+//=============================
 rsiLen = input.int(14, "RSI Length")
-src    = input.source(close, "Source")
+src    = input.source(close, "RSI Source")
+rsi    = ta.rsi(src, rsiLen)
 
-// ---------- RSI ----------
-rsi = ta.rsi(src, rsiLen)
-
-// ---------- HUD logic ----------
+// RSI states
 isBull = rsi >= 50 and rsi < 70
 isOB   = rsi >= 70
 isBear = rsi >= 30 and rsi < 50
 isOS   = rsi <= 30
 
-// Labels & arrows
 arrow = isBull ? "▲" : isOB ? "▼" : isBear ? "▼" : isOS ? "▲" : ""
 label = isBull ? "BULL" : isOB ? "OVERBOUGHT" : isBear ? "BEAR" : isOS ? "OVERSOLD" : "NEUTRAL"
 
-// ---------- Colors ----------
-charcoalBlack = color.rgb(16,16,16)              // true charcoal black
-headerColor   = color.rgb(255,0,255)            // neon magenta
+// Colors
+charcoalBlack = color.rgb(16,16,16)
+headerColor   = color.rgb(255,0,255)
 valueColor    = isOB ? color.rgb(255,100,100) : isOS ? color.rgb(100,150,255) : color.rgb(0,255,255)
 signalColor   = isBull ? color.rgb(0,255,128) : isOB ? color.rgb(255,50,50) : isBear ? color.rgb(255,165,0) : isOS ? color.rgb(50,150,255) : color.rgb(200,200,200)
 stateColor    = signalColor
+bgCell        = charcoalBlack
 
-// Cell backgrounds all charcoal
-bgCell = charcoalBlack
-
-// ---------- HUD Table ----------
+// HUD Table
 var table hud = table.new(position.top_right, 3, 2, border_width=2, frame_color=color.rgb(255,0,255), frame_width=2)
 if barstate.islast
-    // headers
+    // Headers
     table.cell(hud, 0, 0, "pipmatryx value", text_color=headerColor, bgcolor=bgCell)
     table.cell(hud, 1, 0, "Signal", text_color=headerColor, bgcolor=bgCell)
     table.cell(hud, 2, 0, "State", text_color=headerColor, bgcolor=bgCell)
-
-    // values
+    // Values
     table.cell(hud, 0, 1, str.tostring(rsi, "#.##"), text_color=valueColor, bgcolor=bgCell)
     table.cell(hud, 1, 1, arrow, text_color=signalColor, bgcolor=bgCell)
     table.cell(hud, 2, 1, label, text_color=stateColor, bgcolor=bgCell)
-
