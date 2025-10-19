@@ -26,13 +26,17 @@ plot(bullishCross ? ema50 : na, style=plot.style_circles, color=color.purple, li
 plot(bearishCross ? ema50 : na, style=plot.style_circles, color=color.purple, linewidth=3, title="Bearish Knot")
 
 //=============================
-// 🔹 2. Pipmatryx Confirmation HUD (RSI)
+// 🔹 2. Pipmatryx Confirmation HUD (RSI + ATR)
 //=============================
 rsiLen = input.int(14, "RSI Length")
 src    = input.source(close, "RSI Source")
 rsi    = ta.rsi(src, rsiLen)
 
-// RSI states
+// ATR Calculation
+atrLen = input.int(14, "ATR Length")
+atr    = ta.atr(atrLen)
+
+// RSI signal logic
 isBull = rsi >= 50 and rsi < 70
 isOB   = rsi >= 70
 isBear = rsi >= 30 and rsi < 50
@@ -46,17 +50,18 @@ charcoalBlack = color.rgb(16,16,16)
 headerColor   = color.rgb(255,0,255)
 valueColor    = isOB ? color.rgb(255,100,100) : isOS ? color.rgb(100,150,255) : color.rgb(0,255,255)
 signalColor   = isBull ? color.rgb(0,255,128) : isOB ? color.rgb(255,50,50) : isBear ? color.rgb(255,165,0) : isOS ? color.rgb(50,150,255) : color.rgb(200,200,200)
-stateColor    = signalColor
 bgCell        = charcoalBlack
 
-// HUD Table
+//=============================
+// 🔹 3. HUD Table (RSI + ATR)
+//=============================
 var table hud = table.new(position.top_right, 3, 2, border_width=2, frame_color=color.rgb(255,0,255), frame_width=2)
 if barstate.islast
     // Headers
-    table.cell(hud, 0, 0, "pipmatryx value", text_color=headerColor, bgcolor=bgCell)
+    table.cell(hud, 0, 0, "Pipmatryx Value", text_color=headerColor, bgcolor=bgCell)
     table.cell(hud, 1, 0, "Signal", text_color=headerColor, bgcolor=bgCell)
-    table.cell(hud, 2, 0, "State", text_color=headerColor, bgcolor=bgCell)
+    table.cell(hud, 2, 0, "ATR", text_color=headerColor, bgcolor=bgCell)
     // Values
     table.cell(hud, 0, 1, str.tostring(rsi, "#.##"), text_color=valueColor, bgcolor=bgCell)
     table.cell(hud, 1, 1, arrow, text_color=signalColor, bgcolor=bgCell)
-    table.cell(hud, 2, 1, label, text_color=stateColor, bgcolor=bgCell)
+    table.cell(hud, 2, 1, str.tostring(atr, "#.##"), text_color=color.new(color.yellow, 0), bgcolor=bgCell)
